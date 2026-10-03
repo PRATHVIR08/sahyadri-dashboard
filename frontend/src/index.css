@@ -166,6 +166,63 @@ td { padding: 0.7rem 0.55rem; border-bottom: 1px solid #eee6d8; vertical-align: 
 
 .mobile-toggle { display: none; }
 
+/* Progress bars */
+.progress-bg {
+  width: 100%; height: 8px; background: #e8e2d5; border-radius: 999px; overflow: hidden; margin: 0.35rem 0;
+}
+.progress-fill {
+  height: 100%; border-radius: 999px; transition: width 0.4s ease;
+}
+.progress-fill.ok { background: linear-gradient(90deg, #2b8a57, #1f6b45); }
+.progress-fill.warn { background: linear-gradient(90deg, #d99b26, #9a6b12); }
+.progress-fill.risk { background: linear-gradient(90deg, #d94b4b, #9b2c2c); }
+
+/* Glass & Hero Cards */
+.glass-card {
+  background: rgba(255, 253, 248, 0.85);
+  backdrop-filter: blur(12px);
+  border: 1px solid rgba(217, 210, 196, 0.6);
+}
+.hero-card {
+  background: linear-gradient(135deg, #123629 0%, #1b4a38 60%, #2a6850 100%);
+  color: #f4efe4;
+  border-radius: var(--radius);
+  padding: 1.5rem;
+  box-shadow: var(--shadow);
+  margin-bottom: 1.25rem;
+}
+.hero-card h1, .hero-card h2 { color: #ffffff; }
+.hero-card p { color: #d0e2d7; }
+
+/* Chips & Tags */
+.chip-group { display: flex; flex-wrap: wrap; gap: 0.35rem; margin-top: 0.35rem; }
+.chip {
+  background: #ede6d8; color: var(--forest); border-radius: 999px;
+  padding: 0.2rem 0.6rem; font-size: 0.78rem; font-weight: 500;
+  display: inline-flex; align-items: center; gap: 0.25rem;
+}
+.chip.active { background: var(--forest); color: #fff; }
+
+/* Modal overlay */
+.modal-backdrop {
+  position: fixed; inset: 0; background: rgba(18, 38, 28, 0.55);
+  backdrop-filter: blur(4px); z-index: 100;
+  display: grid; place-items: center; padding: 1rem;
+}
+.modal-card {
+  background: var(--card); border: 1px solid var(--line); border-radius: var(--radius);
+  padding: 1.4rem; width: min(600px, 100%); max-height: 90vh; overflow-y: auto;
+  box-shadow: 0 24px 60px rgba(0,0,0,0.25);
+}
+
+/* Animations */
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(6px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+.fade-in { animation: fadeIn 0.25s ease-out forwards; }
+
+/* Responsive adjustments */
 @media (max-width: 980px) {
   .shell { grid-template-columns: 1fr; }
   .sidebar {
@@ -177,3 +234,4 @@ td { padding: 0.7rem 0.55rem; border-bottom: 1px solid #eee6d8; vertical-align: 
   .grid-2, .grid-3, .grid-4 { grid-template-columns: 1fr; }
   .topbar { flex-wrap: wrap; }
 }
+
