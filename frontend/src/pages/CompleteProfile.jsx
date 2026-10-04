@@ -1,27 +1,23 @@
 import { useState } from "react";
-import { Link, useNavigate } from "react-router-dom";
+import { useNavigate } from "react-router-dom";
 import { useAuth } from "../auth";
 
-export default function Register() {
-  const { register, resendConfirmationEmail } = useAuth();
+export default function CompleteProfile() {
+  const { user, saveProfile } = useAuth();
   const navigate = useNavigate();
+
   const [form, setForm] = useState({
-    email: "",
-    password: "",
-    full_name: "",
+    full_name: user?.full_name || user?.name || "",
     usn: "",
     course: "B.E.",
     department: "Information Science & Engineering",
     year: 3,
     semester: 6,
     section: "A",
-    interests: "Web Development, AI/ML, Cloud Computing",
+    interests: "Web Development, AI/ML, Data Science",
     avatar_url: "",
   });
   const [error, setError] = useState("");
-  const [registeredEmail, setRegisteredEmail] = useState("");
-  const [resendMsg, setResendMsg] = useState("");
-  const [resending, setResending] = useState(false);
   const [busy, setBusy] = useState(false);
 
   function onChange(e) {
@@ -35,122 +31,41 @@ export default function Register() {
   async function onSubmit(e) {
     e.preventDefault();
     setError("");
-    setResendMsg("");
-    if (!form.email.toLowerCase().trim().endsWith("@sahyadri.edu.in")) {
-      setError("Please use an official college email address ending with @sahyadri.edu.in");
+    if (!form.full_name.trim()) {
+      setError("Please enter your full name.");
       return;
     }
-    if (form.password.length < 6) {
-      setError("Password must be at least 6 characters long.");
+    if (!form.usn.trim()) {
+      setError("Please enter your USN.");
       return;
     }
+
     setBusy(true);
     try {
-      const payload = {
-        ...form,
-        interests: typeof form.interests === "string"
-          ? form.interests.split(",").map((s) => s.trim()).filter(Boolean)
-          : form.interests,
-      };
-      const result = await register(payload);
-      if (!result?.session) {
-        setRegisteredEmail(form.email.trim());
-      } else {
-        navigate("/");
-      }
+      await saveProfile(form);
+      navigate("/", { replace: true });
     } catch (err) {
-      setError(err.message || "Failed to register. Please check your inputs.");
+      setError(err.message || "Failed to save profile. Please check your inputs.");
     } finally {
       setBusy(false);
     }
-  }
-
-  async function handleResend() {
-    setResending(true);
-    setResendMsg("");
-    try {
-      await resendConfirmationEmail(registeredEmail);
-      setResendMsg("Verification email resent! Check your inbox.");
-    } catch (err) {
-      setResendMsg(`Failed to resend: ${err.message}`);
-    } finally {
-      setResending(false);
-    }
-  }
-
-  if (registeredEmail) {
-    return (
-      <div className="auth-page">
-        <div className="card auth-card fade-in" style={{ maxWidth: "520px", textAlign: "center" }}>
-          <div style={{ fontSize: "2.5rem", marginBottom: "0.5rem" }}>📧</div>
-          <h2>Registration Successful!</h2>
-          <p style={{ marginTop: "0.5rem", color: "#94a3b8" }}>
-            A confirmation link was sent to <strong>{registeredEmail}</strong>.
-          </p>
-          <div style={{
-            background: "rgba(56, 189, 248, 0.08)",
-            border: "1px solid rgba(56, 189, 248, 0.2)",
-            borderRadius: "8px",
-            padding: "1rem",
-            margin: "1.2rem 0",
-            textAlign: "left",
-            fontSize: "0.88rem"
-          }}>
-            <p style={{ fontWeight: 600, color: "#38bdf8", marginBottom: "0.3rem" }}>Next Step:</p>
-            <p>1. Open your email client and find the verification email from Supabase.</p>
-            <p>2. Click the confirmation link inside.</p>
-            <p>3. Return here and sign in to access your student dashboard!</p>
-          </div>
-          <div style={{ display: "flex", gap: "0.5rem", justifyContent: "center", marginTop: "1rem" }}>
-            <Link to="/login" className="btn primary">
-              Go to Sign In
-            </Link>
-            <button type="button" className="btn secondary" onClick={handleResend} disabled={resending}>
-              {resending ? "Sending…" : "Resend Link"}
-            </button>
-          </div>
-          {resendMsg && <p style={{ marginTop: "0.8rem", fontSize: "0.82rem", color: "#e2e8f0" }}>{resendMsg}</p>}
-        </div>
-      </div>
-    );
   }
 
   return (
     <div className="auth-page">
       <div className="card auth-card fade-in" style={{ maxWidth: "620px" }}>
         <span className="badge neutral" style={{ marginBottom: "0.5rem" }}>
-          Sahyadri Student Portal
+          Action Required
         </span>
-        <h1>Create Student Account</h1>
-        <p>Register with your official Sahyadri College email ID (@sahyadri.edu.in).</p>
+        <h1>Complete Your Student Profile</h1>
+        <p>Please provide your academic details to access the Sahyadri Dashboard.</p>
 
         <form className="form" onSubmit={onSubmit}>
           {error && <div className="error">{error}</div>}
 
-          <div className="grid-2">
-            <div className="field">
-              <label>College Email</label>
-              <input
-                type="email"
-                name="email"
-                placeholder="name.is.24@sahyadri.edu.in"
-                value={form.email}
-                onChange={onChange}
-                required
-              />
-            </div>
-
-            <div className="field">
-              <label>Password</label>
-              <input
-                type="password"
-                name="password"
-                placeholder="Minimum 6 characters"
-                value={form.password}
-                onChange={onChange}
-                required
-              />
-            </div>
+          <div className="field">
+            <label>College Email</label>
+            <input type="email" value={user?.email || ""} disabled readOnly style={{ opacity: 0.7 }} />
           </div>
 
           <div className="grid-2">
@@ -238,11 +153,11 @@ export default function Register() {
           </div>
 
           <div className="field">
-            <label>Interests & Domains (comma separated)</label>
+            <label>Interests & Skills (comma separated)</label>
             <input
               type="text"
               name="interests"
-              placeholder="e.g. AI/ML, Web Dev, Mobile Apps, Robotics"
+              placeholder="e.g. AI/ML, Web Dev, Mobile Apps, Competitive Coding"
               value={form.interests}
               onChange={onChange}
             />
@@ -260,13 +175,9 @@ export default function Register() {
           </div>
 
           <button className="btn primary" type="submit" disabled={busy} style={{ marginTop: "0.5rem" }}>
-            {busy ? "Registering account…" : "Create Student Account"}
+            {busy ? "Saving Profile…" : "Complete Profile & Enter Portal"}
           </button>
         </form>
-
-        <p style={{ marginTop: "1rem", textAlign: "center" }}>
-          Already registered? <Link to="/login">Sign in to portal</Link>
-        </p>
       </div>
     </div>
   );

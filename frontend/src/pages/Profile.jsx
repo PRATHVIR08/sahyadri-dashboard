@@ -1,43 +1,34 @@
 import { useEffect, useState } from "react";
-import { User, Mail, Award, BookOpen, Layers, Sparkles, Check, Edit3 } from "lucide-react";
-import { api } from "../api";
+import { Edit3, Sparkles } from "lucide-react";
 import { useAuth } from "../auth";
 
 export default function Profile() {
-  const { user, refresh } = useAuth();
-  const [profile, setProfile] = useState(null);
+  const { user, saveProfile, refresh } = useAuth();
   const [editing, setEditing] = useState(false);
   const [form, setForm] = useState({
-    name: "",
+    full_name: "",
     section: "A",
     semester: 6,
     year: 3,
     interests: "",
-    photo_url: "",
+    avatar_url: "",
   });
   const [busy, setBusy] = useState(false);
   const [message, setMessage] = useState("");
   const [error, setError] = useState("");
 
   useEffect(() => {
-    async function load() {
-      try {
-        const data = await api("/api/auth/me");
-        setProfile(data);
-        setForm({
-          name: data.name || "",
-          section: data.section || "A",
-          semester: data.semester || 6,
-          year: data.year || 3,
-          interests: Array.isArray(data.interests) ? data.interests.join(", ") : data.interests || "",
-          photo_url: data.photo_url || "",
-        });
-      } catch (err) {
-        setError(err.message);
-      }
+    if (user) {
+      setForm({
+        full_name: user.full_name || user.name || "",
+        section: user.section || "A",
+        semester: user.semester || 6,
+        year: user.year || 3,
+        interests: Array.isArray(user.interests) ? user.interests.join(", ") : user.interests || "",
+        avatar_url: user.avatar_url || user.photo_url || "",
+      });
     }
-    load();
-  }, []);
+  }, [user]);
 
   function onChange(e) {
     const { name, value } = e.target;
@@ -53,15 +44,12 @@ export default function Profile() {
     setError("");
     setMessage("");
     try {
-      const payload = {
+      await saveProfile({
         ...form,
-        interests: form.interests.split(",").map((s) => s.trim()).filter(Boolean),
-      };
-      const updated = await api("/api/auth/profile", {
-        method: "PUT",
-        body: JSON.stringify(payload),
+        interests: typeof form.interests === "string"
+          ? form.interests.split(",").map((s) => s.trim()).filter(Boolean)
+          : form.interests,
       });
-      setProfile(updated);
       await refresh();
       setEditing(false);
       setMessage("Profile updated successfully!");
@@ -72,18 +60,20 @@ export default function Profile() {
     }
   }
 
-  if (error && !profile) return <div className="error">{error}</div>;
-  if (!profile) return <div className="empty">Loading student profile…</div>;
+  if (!user) return <div className="empty">Loading student profile…</div>;
+
+  const displayName = user.full_name || user.name || "Student";
+  const avatarSrc = user.avatar_url || user.photo_url;
 
   return (
     <div className="fade-in" style={{ maxWidth: "840px" }}>
       <div className="card" style={{ marginBottom: "1.25rem" }}>
         <div className="row" style={{ justifyContent: "space-between", alignItems: "flex-start" }}>
           <div className="row" style={{ gap: "1.25rem" }}>
-            {profile.photo_url ? (
+            {avatarSrc ? (
               <img
-                src={profile.photo_url}
-                alt={profile.name}
+                src={avatarSrc}
+                alt={displayName}
                 style={{ width: "80px", height: "80px", borderRadius: "50%", objectFit: "cover", border: "3px solid var(--forest)" }}
               />
             ) : (
@@ -91,16 +81,16 @@ export default function Profile() {
                 className="avatar"
                 style={{ width: "80px", height: "80px", fontSize: "1.8rem" }}
               >
-                {profile.name?.slice(0, 2).toUpperCase()}
+                {displayName.slice(0, 2).toUpperCase()}
               </div>
             )}
             <div>
               <span className="badge neutral" style={{ marginBottom: "0.2rem" }}>
-                {profile.role.toUpperCase()} ACCOUNT
+                {(user.role || "student").toUpperCase()} ACCOUNT
               </span>
-              <h1>{profile.name}</h1>
+              <h1>{displayName}</h1>
               <p style={{ margin: 0 }}>
-                USN: <strong>{profile.usn}</strong> · {profile.email}
+                USN: <strong>{user.usn || "N/A"}</strong> · {user.email}
               </p>
             </div>
           </div>
@@ -120,7 +110,7 @@ export default function Profile() {
 
             <div className="field">
               <label>Full Name</label>
-              <input type="text" name="name" value={form.name} onChange={onChange} required />
+              <input type="text" name="full_name" value={form.full_name} onChange={onChange} required />
             </div>
 
             <div className="grid-3">
@@ -163,7 +153,7 @@ export default function Profile() {
 
             <div className="field">
               <label>Profile Avatar URL (Optional Image Link)</label>
-              <input type="url" name="photo_url" value={form.photo_url} onChange={onChange} placeholder="https://..." />
+              <input type="url" name="avatar_url" value={form.avatar_url} onChange={onChange} placeholder="https://..." />
             </div>
 
             <button className="btn primary" type="submit" disabled={busy}>
@@ -177,16 +167,16 @@ export default function Profile() {
             <h2>Academic Details</h2>
             <div className="list-item">
               <span className="muted" style={{ fontSize: "0.8rem" }}>Course / Degree</span>
-              <p style={{ margin: "0.1rem 0", color: "var(--ink)", fontWeight: 600 }}>{profile.course}</p>
+              <p style={{ margin: "0.1rem 0", color: "var(--ink)", fontWeight: 600 }}>{user.course || "B.E."}</p>
             </div>
             <div className="list-item">
               <span className="muted" style={{ fontSize: "0.8rem" }}>Department</span>
-              <p style={{ margin: "0.1rem 0", color: "var(--ink)", fontWeight: 600 }}>{profile.department}</p>
+              <p style={{ margin: "0.1rem 0", color: "var(--ink)", fontWeight: 600 }}>{user.department || "Information Science & Engineering"}</p>
             </div>
             <div className="list-item">
               <span className="muted" style={{ fontSize: "0.8rem" }}>Academic Standard</span>
               <p style={{ margin: "0.1rem 0", color: "var(--ink)", fontWeight: 600 }}>
-                Year {profile.year} · Semester {profile.semester} · Section {profile.section}
+                Year {user.year || 1} · Semester {user.semester || 1} · Section {user.section || "A"}
               </p>
             </div>
           </div>
@@ -197,8 +187,8 @@ export default function Profile() {
               Domains you are passionate about. These help customize peer recommendations and career opportunity matching.
             </p>
             <div className="chip-group" style={{ marginTop: "0.8rem" }}>
-              {Array.isArray(profile.interests) && profile.interests.length > 0 ? (
-                profile.interests.map((interest, idx) => (
+              {Array.isArray(user.interests) && user.interests.length > 0 ? (
+                user.interests.map((interest, idx) => (
                   <span key={idx} className="chip active">
                     <Sparkles size={12} /> {interest}
                   </span>

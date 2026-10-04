@@ -154,9 +154,17 @@ export default function AppShell() {
               <Bell size={12} /> {user?.department} · Sem {user?.semester} {user?.section}
             </span>
             <div className="user-chip">
-              <div className="avatar">{user?.name?.slice(0, 2).toUpperCase()}</div>
+              {user?.avatar_url || user?.photo_url ? (
+                <img
+                  src={user.avatar_url || user.photo_url}
+                  alt={user?.full_name || user?.name}
+                  style={{ width: "32px", height: "32px", borderRadius: "50%", objectFit: "cover" }}
+                />
+              ) : (
+                <div className="avatar">{(user?.full_name || user?.name || "ST").slice(0, 2).toUpperCase()}</div>
+              )}
               <div>
-                <strong style={{ display: "block", fontSize: "0.85rem" }}>{user?.name}</strong>
+                <strong style={{ display: "block", fontSize: "0.85rem" }}>{user?.full_name || user?.name}</strong>
                 <span className="muted" style={{ fontSize: "0.72rem" }}>{user?.usn}</span>
               </div>
             </div>

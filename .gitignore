@@ -18,6 +18,8 @@ env/
 
 # Environment variables & Local database
 .env
+.env.local
+.env.*.local
 *.db
 *.sqlite
 *.sqlite3

@@ -3,6 +3,9 @@ import { useAuth } from "./auth";
 import AppShell from "./layout/AppShell";
 import Login from "./pages/Login";
 import Register from "./pages/Register";
+import ForgotPassword from "./pages/ForgotPassword";
+import ResetPassword from "./pages/ResetPassword";
+import CompleteProfile from "./pages/CompleteProfile";
 import Dashboard from "./pages/Dashboard";
 import Attendance from "./pages/Attendance";
 import Sgpa from "./pages/Sgpa";
@@ -20,16 +23,26 @@ import Credits from "./pages/Credits";
 import Admin from "./pages/Admin";
 
 function Guard({ children }) {
-  const { user, loading } = useAuth();
+  const { user, loading, hasProfile } = useAuth();
   if (loading) return <div className="empty">Loading portal…</div>;
   if (!user) return <Navigate to="/login" replace />;
+  if (!hasProfile) return <Navigate to="/complete-profile" replace />;
   return children;
 }
 
 function Guest({ children }) {
-  const { user, loading } = useAuth();
+  const { user, loading, hasProfile } = useAuth();
   if (loading) return <div className="empty">Loading…</div>;
-  if (user) return <Navigate to="/" replace />;
+  if (user && hasProfile) return <Navigate to="/" replace />;
+  if (user && !hasProfile) return <Navigate to="/complete-profile" replace />;
+  return children;
+}
+
+function ProfileGuard({ children }) {
+  const { user, loading, hasProfile } = useAuth();
+  if (loading) return <div className="empty">Loading portal…</div>;
+  if (!user) return <Navigate to="/login" replace />;
+  if (hasProfile) return <Navigate to="/" replace />;
   return children;
 }
 
@@ -50,6 +63,30 @@ export default function App() {
           <Guest>
             <Register />
           </Guest>
+        }
+      />
+      <Route
+        path="/forgot-password"
+        element={
+          <Guest>
+            <ForgotPassword />
+          </Guest>
+        }
+      />
+      <Route
+        path="/reset-password"
+        element={
+          <Guest>
+            <ResetPassword />
+          </Guest>
+        }
+      />
+      <Route
+        path="/complete-profile"
+        element={
+          <ProfileGuard>
+            <CompleteProfile />
+          </ProfileGuard>
         }
       />
       <Route
